@@ -6,7 +6,7 @@
 /*   By: emadriga <emadriga@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/11 15:37:13 by emadriga          #+#    #+#             */
-/*   Updated: 2022/02/21 18:44:48 by emadriga         ###   ########.fr       */
+/*   Updated: 2022/08/09 20:12:13 by emadriga         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,8 @@ static void	wait_threads(t_philo *ph, int nbr_philos, int i)
 	i = START_ITERATOR;
 	while (++i < nbr_philos)
 		pthread_mutex_destroy(&ph[i].lfork);
+	pthread_mutex_destroy(&ph[0].data->m_off);
+	pthread_mutex_destroy(&ph[0].data->m_print);
 	free(ph);
 }
 
@@ -51,6 +53,11 @@ static int	cant_init_threads(t_philo *ph, int i)
 static int	cant_init_mutex(t_philo *ph, t_data *data, int i)
 {
 	if (pthread_mutex_init(&data->m_print, NULL))
+	{
+		printf(ERROR, PRINT_MUTEX_INIT_FAILED);
+		return (1);
+	}
+	if (pthread_mutex_init(&data->m_off, NULL))
 	{
 		printf(ERROR, PRINT_MUTEX_INIT_FAILED);
 		return (1);

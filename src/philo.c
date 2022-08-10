@@ -6,7 +6,7 @@
 /*   By: emadriga <emadriga@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/11 15:37:07 by emadriga          #+#    #+#             */
-/*   Updated: 2022/01/09 08:28:11 by emadriga         ###   ########.fr       */
+/*   Updated: 2022/08/10 19:04:41 by emadriga         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,6 +83,8 @@ static int	cant_parse_philo(int argc, char **argv, t_data *data)
 	data->t2d = ft_atoi(argv[2]);
 	data->t2e = ft_atoi(argv[3]);
 	data->t2s = ft_atoi(argv[4]);
+	data->delay = data->t2d << 4;
+	data->min_delay = data->t2d >> 2;
 	data->off = 0;
 	data->total_meals = -1;
 	if (argc == 6)

@@ -6,7 +6,7 @@
 #    By: emadriga <emadriga@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/12/11 15:36:58 by emadriga          #+#    #+#              #
-#    Updated: 2021/12/11 15:37:03 by emadriga         ###   ########.fr        #
+#    Updated: 2022/08/10 22:28:45 by emadriga         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,7 +18,8 @@ FLAGS	=	-Wall -Wextra -Werror -Ofast $(SANITIZE)
 
 # sanitize
 # SANITIZE =
-SANITIZE = -g3 -fsanitize=address
+# SANITIZE = -g3 -fsanitize=address
+SANITIZE = -g3 -fsanitize=thread
 
 # Header files
 INCLUDES_FILES =	philo.h

@@ -6,7 +6,7 @@
 /*   By: emadriga <emadriga@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/11 15:37:11 by emadriga          #+#    #+#             */
-/*   Updated: 2022/02/21 18:44:29 by emadriga         ###   ########.fr       */
+/*   Updated: 2022/08/10 22:00:56 by emadriga         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,13 +16,18 @@ static int	kill_philo(t_philo *ph)
 {
 	u_int64_t	now;
 
-	ph->status = DIE;
-	ph->data->off = 1;
-	usleep(100);
-	pthread_mutex_lock(&ph->data->m_print);
-	now = ph->lastmeal + ph->data->t2d;
-	printf(PHILO_DIES, now - ph->data->start, ph->id);
-	pthread_mutex_unlock(&ph->data->m_print);
+	pthread_mutex_lock(&ph->data->m_off);
+	if (!ph->data->off)
+	{
+		ph->status = DIE;
+		ph->data->off = 1;
+		usleep(ph->data->delay);
+		pthread_mutex_lock(&ph->data->m_print);
+		now = ph->lastmeal + ph->data->t2d;
+		printf(PHILO_DIES, now - ph->data->start, ph->id);
+		pthread_mutex_unlock(&ph->data->m_print);
+	}
+	pthread_mutex_unlock(&ph->data->m_off);
 	return (0);
 }
 
@@ -60,27 +65,30 @@ static int	philo_eat(t_philo *ph)
 */
 static void	try_lock_forks(t_philo *ph, u_int64_t	now)
 {
+	pthread_mutex_lock(&ph->lfork);
 	if (ph->lforkval == TABLE)
 	{
-		pthread_mutex_lock(&ph->lfork);
 		ph->lforkval = LEFT_HAND;
-		pthread_mutex_unlock(&ph->lfork);
 		print_action(ph, LEFT_FORK_TAKEN, now);
 	}
-	if (*ph->rforkval == TABLE)
+	if (ph->data->nbr_philos > 1)
 	{
 		pthread_mutex_lock(ph->rfork);
-		*ph->rforkval = RIGHT_HAND;
+		if (*ph->rforkval == TABLE)
+		{
+			*ph->rforkval = RIGHT_HAND;
+			print_action(ph, RIGHT_FORK_TAKEN, now);
+		}
+		if (ph->lforkval == LEFT_HAND && *ph->rforkval == RIGHT_HAND)
+		{
+			ph->status = EAT;
+			ph->lastmeal = get_current_time();
+			print_action(ph, PHILO_EATS, ph->lastmeal);
+			ph->status_changed = TRUE;
+		}
 		pthread_mutex_unlock(ph->rfork);
-		print_action(ph, RIGHT_FORK_TAKEN, now);
 	}
-	if (ph->lforkval == LEFT_HAND && *ph->rforkval == RIGHT_HAND)
-	{
-		ph->status = EAT;
-		ph->lastmeal = get_current_time();
-		print_action(ph, PHILO_EATS, ph->lastmeal);
-		ph->status_changed = TRUE;
-	}
+	pthread_mutex_unlock(&ph->lfork);
 }
 
 void	*life_cycle(void *arg)
@@ -90,7 +98,7 @@ void	*life_cycle(void *arg)
 
 	ph = (t_philo *) arg;
 	ph->lastmeal = get_current_time();
-	while (!ph->data->off && ph->meal_count != 0)
+	while (ph->meal_count != 0 && !stop(ph->data))
 	{
 		now = get_current_time();
 		if (now > ph->lastmeal + ph->data->t2d)
@@ -102,10 +110,7 @@ void	*life_cycle(void *arg)
 		else if (ph->status == SLEEP \
 		&& now > ph->lastmeal + ph->data->t2e + ph->data->t2s)
 			philo_sleep(ph);
-		if (ph->status_changed--)
-			usleep(5000);
-		else
-			usleep(50);
+		performance_delay(ph);
 	}
 	return (0);
 }
